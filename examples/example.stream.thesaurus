@@ -1,0 +1,5 @@
+NS1 http://localhost:9001/agent1.owl retailer
+NS2 http://localhost:9002/agent2.owl billing-service
+D billing-information = billing-information
+D purchase-order = purchase-order
+D billing-address = billing-address

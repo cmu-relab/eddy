@@ -1,0 +1,283 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://localhost/agent1.owl#"
+     xml:base="http://localhost/agent1.owl"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:policy-base="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#"
+     xmlns:agent1="http://localhost/agent1.owl#">
+    <owl:Ontology rdf:about="http://localhost/agent1.owl">
+        <owl:imports rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl"/>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://localhost/agent1.owl#COLLECT -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#COLLECT">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Action"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#TRANSFER -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#TRANSFER">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Action"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#billing -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#billing">
+        <rdfs:subClassOf rdf:resource="http://localhost/agent1.owl#product-and-service-fulfillment"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#billing-service -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#billing-service">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Actor"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#browsing-history -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#browsing-history">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Datum"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#commonly-accepted-practices -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#commonly-accepted-practices">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Purpose"/>
+        <owl:disjointWith rdf:resource="http://localhost/agent1.owl#marketing"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#consumer -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#consumer">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Actor"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#first-party-marketing -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#first-party-marketing">
+        <rdfs:subClassOf rdf:resource="http://localhost/agent1.owl#commonly-accepted-practices"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#fraud-prevention -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#fraud-prevention">
+        <rdfs:subClassOf rdf:resource="http://localhost/agent1.owl#commonly-accepted-practices"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#internal-operations -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#internal-operations">
+        <rdfs:subClassOf rdf:resource="http://localhost/agent1.owl#commonly-accepted-practices"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#legal-compliance-and-public-purpose -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#legal-compliance-and-public-purpose">
+        <rdfs:subClassOf rdf:resource="http://localhost/agent1.owl#commonly-accepted-practices"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#marketing -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#marketing">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Purpose"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#product-and-service-fulfillment -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#product-and-service-fulfillment">
+        <rdfs:subClassOf rdf:resource="http://localhost/agent1.owl#commonly-accepted-practices"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#purchase-order -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#purchase-order">
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Datum"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#r0 -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#r0">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://localhost/agent1.owl#COLLECT"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasObject"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#purchase-order"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasPurpose"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#commonly-accepted-practices"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasSource"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#consumer"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Right"/>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Rule"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#r1 -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#r1">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://localhost/agent1.owl#COLLECT"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasObject"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#browsing-history"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasPurpose"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#marketing"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasSource"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#consumer"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Right"/>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Rule"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#r2 -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#r2">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://localhost/agent1.owl#TRANSFER"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasObject"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#purchase-order"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasPurpose"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#billing"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasSource"/>
+                        <owl:someValuesFrom rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Actor"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasTarget"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#billing-service"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Right"/>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Rule"/>
+    </owl:Class>
+    
+
+
+    <!-- http://localhost/agent1.owl#r3 -->
+
+    <owl:Class rdf:about="http://localhost/agent1.owl#r3">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://localhost/agent1.owl#TRANSFER"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasObject"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#browsing-history"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasPurpose"/>
+                        <owl:someValuesFrom rdf:resource="http://localhost/agent1.owl#marketing"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasSource"/>
+                        <owl:someValuesFrom rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Actor"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#hasTarget"/>
+                        <owl:someValuesFrom rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Actor"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Right"/>
+        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Rule"/>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://localhost/agent1.owl#first-party-marketing"/>
+            <rdf:Description rdf:about="http://localhost/agent1.owl#fraud-prevention"/>
+            <rdf:Description rdf:about="http://localhost/agent1.owl#internal-operations"/>
+            <rdf:Description rdf:about="http://localhost/agent1.owl#legal-compliance-and-public-purpose"/>
+            <rdf:Description rdf:about="http://localhost/agent1.owl#product-and-service-fulfillment"/>
+        </owl:members>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 3.2.4.1806) http://owlapi.sourceforge.net -->
+

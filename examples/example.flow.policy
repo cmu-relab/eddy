@@ -1,0 +1,14 @@
+SPEC HEADER
+	ATTR NAMESPACE "http://localhost/agent1.owl"
+	ATTR DESC "This policy describes a product retailer"
+	P commonly-accepted-practices > product-and-service-fulfillment
+	P commonly-accepted-practices > internal-operations
+	P commonly-accepted-practices > fraud-prevention
+	P commonly-accepted-practices > legal-compliance-and-public-purpose
+	P commonly-accepted-practices > first-party-marketing
+	P product-and-service-fulfillment > billing
+SPEC POLICY
+	R COLLECT purchase-order FROM consumer FOR commonly-accepted-practices
+	R COLLECT browsing-history FROM consumer FOR marketing
+	R TRANSFER purchase-order TO billing-service FOR billing
+	R TRANSFER browsing-history TO anyone FOR marketing

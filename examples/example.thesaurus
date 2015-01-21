@@ -1,0 +1,7 @@
+A health-plan = health-plan
+A covered-entity = covered-entity  
+A healthcare-provider = healthcare-provider
+A hmo = hmo
+A patient = patient
+D patient-labs = patient-labs
+P health-surveillance = health-surveillance

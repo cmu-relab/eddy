@@ -1,0 +1,7 @@
+# Context
+local examples/example.stream1.policy http://localhost:9001/agent1.owl
+
+# Supplier
+recv billing-service http://localhost:9002/agent2.owl examples/example.thesaurus 12/6/11
+
+# Consumer

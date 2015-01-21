@@ -1,0 +1,14 @@
+SPEC HEADER
+	ATTR NAMESPACE "http://gaius.isri.cmu.edu/example2.owl"
+	ATTR DESC "This policy is written to test the use limitation principle"
+	P treatment > diagnosis,prescription,bloodtests
+	D patient-labs > bloodwork
+	A medical-professional > phlebotomist,doctor,nurse
+	A laboratory > phlebotomist
+SPEC POLICY
+	R COLLECT bloodwork FROM phlebotomist FOR treatment
+	R COLLECT bloodwork FROM laboratory FOR treatment
+	R USE bloodwork FROM phlebotomist FOR marketing
+	R USE patient-labs FROM phlebotomist FOR anything
+	R USE bloodwork FROM medical-professional FOR diagnosis
+	P USE bloodwork FROM medical-professional FOR anything
