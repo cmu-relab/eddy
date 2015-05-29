@@ -49,14 +49,6 @@
     <!-- http://gaius.isri.cmu.edu/example2.owl#bloodwork -->
 
     <owl:Class rdf:about="http://gaius.isri.cmu.edu/example2.owl#bloodwork">
-        <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/2011/8/policy-base.owl#Datum"/>
-    </owl:Class>
-    
-
-
-    <!-- http://gaius.isri.cmu.edu/example2.owl#bloodworm -->
-
-    <owl:Class rdf:about="http://gaius.isri.cmu.edu/example2.owl#bloodworm">
         <rdfs:subClassOf rdf:resource="http://gaius.isri.cmu.edu/example2.owl#patient-labs"/>
     </owl:Class>
     

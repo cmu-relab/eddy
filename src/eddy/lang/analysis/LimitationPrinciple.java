@@ -10,6 +10,7 @@ import eddy.lang.Action;
 import eddy.lang.Policy;
 import eddy.lang.Role;
 import eddy.lang.Rule;
+import eddy.lang.Rule.Modality;
 import eddy.lang.parser.Compilation;
 import eddy.lang.parser.CompilationProperties;
 import eddy.lang.parser.Compiler;
@@ -70,8 +71,7 @@ public class LimitationPrinciple implements CompilationProperties {
 		targetRights.clear();
 		for (Rule rule : policy.rules()) {
 			// skip all rules that are not permissions, or implied permissions
-			if (rule.modality != Rule.Modality.PERMISSION 
-					&& rule.modality != Rule.Modality.OBLIGATION) {
+			if (rule.modality != Modality.PERMISSION && rule.modality != Modality.OBLIGATION) {
 				continue;
 			}
 			if (source.contains(rule.action.name)) {
@@ -84,7 +84,7 @@ public class LimitationPrinciple implements CompilationProperties {
 		}
 		logger.log(Logger.DEBUG, "Identified " + sourceRights.size() + " source and " + targetRights.size() + " target rights");
 		
-		// create an cloned policy extended with the limitation rights
+		// create a cloned policy extended with the limitation rights
 		Policy extPolicy = policy.clone();
 		int counter = 0;
 		limitRights.clear();
@@ -218,6 +218,9 @@ public class LimitationPrinciple implements CompilationProperties {
 
 			for (String id : rules.keySet()) {
 				for (Rule rule : rules.get(id)) {
+					if (rule.modality != Modality.PERMISSION && rule.modality != Modality.OBLIGATION) {
+						continue;
+					}
 					Action action = extComp.getAction(id);
 					conflicts.add(new Conflict(Conflict.Type.EXTENDED, rule, id, action));
 				}
