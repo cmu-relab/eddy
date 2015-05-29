@@ -3,7 +3,7 @@ SPEC HEADER
 	ATTR DESC "This policy is written to test the use limitation principle"
 	ATTR LIMIT-USE
 	P treatment > diagnosis,prescription,bloodtests
-	D patient-labs > bloodworm
+	D patient-labs > bloodwork
 	A medical-professional > phlebotomist,doctor,nurse
 SPEC POLICY
 	P COLLECT bloodwork FROM phlebotomist FOR treatment
