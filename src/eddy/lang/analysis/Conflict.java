@@ -59,7 +59,10 @@ public class Conflict implements Comparable<Conflict> {
 	}
 	
 	public String toString() {
-		String s = type + " " + rule1.id + "," + rule2.id;
+		String s = type + " " + rule1.id;
+		if (type != Type.EXTENDED) {
+			s += "," + rule2.id;
+		}
 		if (type == Type.SHARED) {
 			return s + " at " + actions.keySet().toString();
 		}

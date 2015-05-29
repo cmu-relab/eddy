@@ -11,5 +11,5 @@ SPEC HEADER
 	D billing-information > billing-address
 
 SPEC POLICY
-	R COLLECT purchase-order FROM retailer FOR billing
-	R TRANSFER billing-address TO advertiser FOR marketing
+	P COLLECT purchase-order FROM retailer FOR billing
+	P TRANSFER billing-address TO advertiser FOR marketing

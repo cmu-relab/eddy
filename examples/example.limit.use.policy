@@ -6,9 +6,9 @@ SPEC HEADER
 	D patient-labs > bloodworm
 	A medical-professional > phlebotomist,doctor,nurse
 SPEC POLICY
-	R COLLECT bloodwork FROM phlebotomist FOR treatment
-	R COLLECT bloodwork FROM laboratory FOR treatment
-	R USE bloodwork FROM phlebotomist FOR marketing
-	R USE patient-labs FROM phlebotomist FOR anything
-	R USE bloodwork FROM medical-professional FOR diagnosis
-	P USE bloodwork FROM medical-professional FOR anything
+	P COLLECT bloodwork FROM phlebotomist FOR treatment
+	P COLLECT bloodwork FROM laboratory FOR treatment
+	P USE bloodwork FROM phlebotomist FOR marketing
+	P USE patient-labs FROM phlebotomist FOR anything
+	P USE bloodwork FROM medical-professional FOR diagnosis
+	R USE bloodwork FROM medical-professional FOR anything

@@ -11,7 +11,7 @@ SPEC HEADER
 	D billing-information > billing-address
 	
 SPEC POLICY
-	R COLLECT purchase-order FROM consumer FOR commonly-accepted-practices
-	R COLLECT browsing-history FROM consumer FOR marketing
-	R TRANSFER billing-information TO billing-service FOR billing
-	R TRANSFER browsing-history TO anyone FOR marketing
+	P COLLECT purchase-order FROM consumer FOR commonly-accepted-practices
+	P COLLECT browsing-history FROM consumer FOR marketing
+	P TRANSFER billing-information TO billing-service FOR billing
+	P TRANSFER browsing-history TO anyone FOR marketing

@@ -8,7 +8,7 @@ SPEC HEADER
 	P commonly-accepted-practices > first-party-marketing
 	P product-and-service-fulfillment > billing
 SPEC POLICY
-	R COLLECT purchase-order FROM consumer FOR commonly-accepted-practices
-	R COLLECT browsing-history FROM consumer FOR marketing
-	R TRANSFER purchase-order TO billing-service FOR billing
-	R TRANSFER browsing-history TO anyone FOR marketing
+	P COLLECT purchase-order FROM consumer FOR commonly-accepted-practices
+	P COLLECT browsing-history FROM consumer FOR marketing
+	P TRANSFER purchase-order TO billing-service FOR billing
+	P TRANSFER browsing-history TO anyone FOR marketing

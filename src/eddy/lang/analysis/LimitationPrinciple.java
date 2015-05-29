@@ -69,6 +69,11 @@ public class LimitationPrinciple implements CompilationProperties {
 		ArrayList<Action> targetActions = new ArrayList<Action>();
 		targetRights.clear();
 		for (Rule rule : policy.rules()) {
+			// skip all rules that are not permissions, or implied permissions
+			if (rule.modality != Rule.Modality.PERMISSION 
+					&& rule.modality != Rule.Modality.OBLIGATION) {
+				continue;
+			}
 			if (source.contains(rule.action.name)) {
 				sourceRights.add(rule);
 			}
