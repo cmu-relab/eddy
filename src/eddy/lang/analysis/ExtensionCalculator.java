@@ -66,6 +66,7 @@ public class ExtensionCalculator implements CompilerConstants, CompilationProper
 	private boolean computeExceptions = false;
 	private boolean computeCompleteExtension = false;
 	private boolean computeOnlyProhibitions = true;
+	private static File basePath = null;
 	
 	public ExtensionCalculator() {
 		return;
@@ -111,6 +112,10 @@ public class ExtensionCalculator implements CompilerConstants, CompilationProper
 		roleRangeMap.put(Role.Type.SOURCE, castActor);
 		roleRangeMap.put(Role.Type.TARGET, castActor);
 		roleRangeMap.put(Role.Type.PURPOSE, castPurpose);
+	}
+	
+	public static void setOntologyBasePath(String pathname) {
+		basePath = new File(pathname);
 	}
 	
 	public Logger getLogger() {
@@ -370,12 +375,11 @@ public class ExtensionCalculator implements CompilerConstants, CompilationProper
 		OWLOntology ontology = null;
 		OWLOntology onto = comp.getOntology();
 		String ns = onto.getOntologyID().getOntologyIRI().toString();
-		boolean useLocal = false;
 		
 		// load the upper ontology
-		if (useLocal) {
+		if (basePath != null) {
 			IRI docIRI = IRI.create("http://gaius.isri.cmu.edu/2011/8/policy-base.owl");
-			SimpleIRIMapper mapper = new SimpleIRIMapper(docIRI, IRI.create(new File("study/policy-base.owl")));
+			SimpleIRIMapper mapper = new SimpleIRIMapper(docIRI, IRI.create(basePath));
 			manager.addIRIMapper(mapper);
 		}
 		

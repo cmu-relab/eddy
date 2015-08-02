@@ -36,7 +36,7 @@ public class ConflictExample {
 	public static void main(String[] args) throws ParseException,OWLException {
 		final String filestub = "examples/example.conflicts";
 		final String exampleName = ConflictExample.class.getName();
-		boolean useLocal = false;
+		boolean useLocal = true;
 		
 		long time = System.currentTimeMillis();
 		Parser parser = new Parser();
@@ -48,6 +48,9 @@ public class ConflictExample {
 			IRI docIRI = IRI.create("http://gaius.isri.cmu.edu/2011/8/policy-base.owl");
 			SimpleIRIMapper mapper = new SimpleIRIMapper(docIRI, IRI.create(new File("examples/policy-base.owl")));
 			compiler.getManager().addIRIMapper(mapper);
+			
+			// tell extension calculator to use local ontology
+			ExtensionCalculator.setOntologyBasePath("examples/policy-base.owl");
 		}
 		
 		// compile the policy
