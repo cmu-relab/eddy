@@ -4,12 +4,16 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
+
 import eddy.lang.Policy;
 import eddy.lang.parser.ParseException;
 import eddy.lang.parser.Parser;
 
-public class AgentServerTest2 extends TestCase {
+public class AgentServerTest2 {
+	
+	@Test
 	public void test1_AgentServer() throws ParseException, IOException {
 		// create the policy
 		String text = "SPEC HEADER\n" +
@@ -41,6 +45,6 @@ public class AgentServerTest2 extends TestCase {
 		}
 		
 		Agent agent2 = AgentClient.retrieve(agent.uri);
-		assertEquals(agent2.toString(), policy.toString());
+		Assert.assertEquals(agent2.toString(), policy.toString());
 	}
 }

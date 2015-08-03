@@ -21,5 +21,5 @@ public interface CompilationProperties {
 	public final static String LIMIT_SOURCE = "limitation-source";
 	public final static String LIMIT_TARGET = "limitation-target";
 	public final static String LIMIT_RIGHTS = "limitation-rights";
-	public final static String LIMIT_CONFLICTS = "limitation-conflicts";
+	public final static String LIMIT_VIOLATIONS = "limitation-violations";
 }

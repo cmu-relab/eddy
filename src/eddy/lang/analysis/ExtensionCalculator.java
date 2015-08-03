@@ -54,74 +54,187 @@ import eddy.lang.parser.ParseException;
  */
 
 public class ExtensionCalculator implements CompilerConstants, CompilationProperties {
+	abstract class RoleValueCastor {
+		public abstract RoleValue cast(OWLClass c);
+	}
+	private static File basePolicy = null;
+	public static Extension extend(Compilation comp, List<Action> actions, int counter) {
+		// copy the ontology before performing extension
+		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+		OWLDataFactory factory = manager.getOWLDataFactory();
+		OWLOntology ontology = null;
+		OWLOntology onto = comp.getOntology();
+		String ns = onto.getOntologyID().getOntologyIRI().toString();
+		
+		// load the upper ontology
+		if (basePolicy != null) {
+			IRI docIRI = IRI.create("http://gaius.isri.cmu.edu/2011/8/policy-base.owl");
+			SimpleIRIMapper mapper = new SimpleIRIMapper(docIRI, IRI.create(basePolicy));
+			manager.addIRIMapper(mapper);
+		}
+		
+		IRI iri = IRI.create(Compiler.NS);
+		OWLImportsDeclaration decl = factory.getOWLImportsDeclaration(iri);
+		OWLOntologyLoaderConfiguration conf = new OWLOntologyLoaderConfiguration();
+
+		try {
+			ontology = manager.createOntology(IRI.create(ns));
+			manager.applyChange(new AddImport(ontology, decl));
+			manager.loadOntology(iri);
+			manager.makeLoadImportRequest(decl, conf);
+
+		} catch (OWLOntologyCreationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// copy the axioms from the existing ontology
+		manager.addAxioms(ontology, onto.getAxioms());
+		
+		// compile the extension into the new ontology
+		Compiler compiler = new Compiler(ontology);
+		TreeMap<String,Action> extMap = new TreeMap<String,Action>();
+		
+		// for each action, create a new equivalence class to index that action
+		for (Action a : actions) {
+			try {
+				OWLClassExpression expr = compiler.compile(a);
+				OWLClassExpression id = factory.getOWLClass(IRI.create(ns + "#x" + counter));
+				OWLAxiom axiom1 = factory.getOWLEquivalentClassesAxiom(id, expr);
+				manager.addAxiom(ontology, axiom1);
+				extMap.put("x" + counter, a);
+				counter++;
+				
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		comp.getProperties().setProperty(CompilationProperties.EXT_COMPUTED, "true");
+		comp.getProperties().setProperty(CompilationProperties.EXT_SIZE, counter + "");
+		
+		return new Extension(compiler, comp.getPolicy(), ontology, extMap);
+	}
+	public static TreeMap<Rule,TreeSet<String>> findExtension(Compilation comp, List<Rule> rules) {
+		TreeMap<Rule,TreeSet<String>> map = new TreeMap<Rule,TreeSet<String>>();
+		
+		// setup the reasoner classes
+		String ns = comp.getOntology().getOntologyID().getOntologyIRI().toString();
+		OWLReasoner reasoner = comp.getReasoner();
+		OWLDataFactory factory = comp.getOntology().getOWLOntologyManager().getOWLDataFactory();
+		
+		/* For each rule, find all the subclasses of the rule id that are also
+		 * subclasses of the extension
+		 */
+		for (Rule rule : rules) {
+			OWLClass id = factory.getOWLClass(IRI.create(ns + "#" + rule.id));
+			Set<OWLClass> set = reasoner.getSubClasses(id, true).getFlattened();
+			
+			for (OWLClass c : set) {
+				TreeSet<String> ids = map.get(rule);
+				if (ids == null) {
+					ids = new TreeSet<String>();
+					map.put(rule, ids);
+				}
+				ids.add(c.getIRI().getFragment());
+			}
+		}
+		
+		return map;
+	}
+	public static TreeMap<String,TreeSet<Rule>> findRules(Compilation comp, Action action) {
+		TreeMap<String,TreeSet<Rule>> map = new TreeMap<String,TreeSet<Rule>>();
+		
+		// setup the reasoner classes
+		OWLReasoner reasoner = comp.getReasoner();
+		Policy policy = comp.getPolicy();
+		
+		/* For each action, find all the rules that are also subclasses of the action
+		 */
+		try {
+			OWLClassExpression expr = comp.getCompiler().compile(action);
+			Set<OWLClass> set = reasoner.getSubClasses(expr, true).getFlattened();
+			
+			for (OWLClass c : set) {
+				String id = c.getIRI().getFragment();
+				Rule rule = policy.getRule(id);
+
+				if (rule == null) {
+					continue;
+				}
+				TreeSet<Rule> rules = map.get(id);
+				if (rules == null) {
+					rules = new TreeSet<Rule>();
+					map.put(id, rules);
+				}
+				rules.add(rule);
+			}
+		} 
+		catch (ParseException e) {
+			return map;
+		}
+		return map;
+	}
+	public static TreeMap<String,TreeSet<Rule>> findRules(Compilation comp, Set<String> ext) {
+		TreeMap<String,TreeSet<Rule>> map = new TreeMap<String,TreeSet<Rule>>();
+		
+		// setup the reasoner classes
+		String ns = comp.getOntology().getOntologyID().getOntologyIRI().toString();
+		OWLReasoner reasoner = comp.getReasoner();
+		OWLDataFactory factory = comp.getOntology().getOWLOntologyManager().getOWLDataFactory();
+		Policy policy = comp.getPolicy();
+		
+		/* For each extension id, find all the superclasses of id that are also
+		 * subclasses of rule
+		 */
+		for (String extID : ext) {
+			OWLClass expr = factory.getOWLClass(IRI.create(ns + "#" + extID));
+			Set<OWLClass> set = reasoner.getSuperClasses(expr, true).getFlattened();
+			
+			for (OWLClass c : set) {
+				String id = c.getIRI().getFragment();
+				Rule rule = policy.getRule(id);
+
+				if (rule == null) {
+					continue;
+				}
+				TreeSet<Rule> rules = map.get(extID);
+				if (rules == null) {
+					rules = new TreeSet<Rule>();
+					map.put(extID, rules);
+				}
+				rules.add(rule);
+			}
+		}
+		return map;
+	}
+	public static void setOntologyBasePolicy(String pathname) {
+		basePolicy = new File(pathname);
+	}
 	private OWLOntology ontology;
 	private OWLOntologyManager manager;
 	private OWLDataFactory factory;
 	private OWLReasoner reasoner;
 	private Compiler compiler;
 	private RoleValueCastor castActor, castDatum, castPurpose;
+	
 	private TreeMap<Role.Type,RoleValueCastor> roleRangeMap = new TreeMap<Role.Type,RoleValueCastor>();
+	
 	private OWLClass classActor, classDatum, classPurpose;
+	
 	private final Logger logger = new Logger(new PrintWriter(System.err), Logger.WARN, this.getClass().getName() + ": ");
+	
 	private boolean computeExceptions = false;
+	
 	private boolean computeCompleteExtension = false;
+	
 	private boolean computeOnlyProhibitions = true;
-	private static File basePath = null;
 	
 	public ExtensionCalculator() {
 		return;
 	}
-	
-	private void setupClassesAndCastors() {
-		classActor = factory.getOWLClass(IRI.create(nsActor));
-		classDatum = factory.getOWLClass(IRI.create(nsDatum));
-		classPurpose = factory.getOWLClass(IRI.create(nsPurpose));
-		
-		castActor = new RoleValueCastor() {
-			public RoleValue cast(OWLClass c) {
-				if (!c.equals(classActor)) {
-					return new Actor(c.getIRI().getFragment());
-				}
-				else {
-					return Actor.ANYONE;
-				}
-			}
-		};
-		castDatum = new RoleValueCastor() {
-			public RoleValue cast(OWLClass c) {
-				if (!c.equals(classDatum)) {
-					return new Datum(c.getIRI().getFragment());
-				}
-				else {
-					return Datum.ANYTHING;
-				}
-			}
-		};
-		castPurpose = new RoleValueCastor() {
-			public RoleValue cast(OWLClass c) {
-				if (!c.equals(classPurpose)) {
-					return new Purpose(c.getIRI().getFragment());
-				}
-				else {
-					return Purpose.ANYTHING;
-				}
-			}
-		};
-		
-		roleRangeMap.put(Role.Type.OBJECT, castDatum);
-		roleRangeMap.put(Role.Type.SOURCE, castActor);
-		roleRangeMap.put(Role.Type.TARGET, castActor);
-		roleRangeMap.put(Role.Type.PURPOSE, castPurpose);
-	}
-	
-	public static void setOntologyBasePath(String pathname) {
-		basePath = new File(pathname);
-	}
-	
-	public Logger getLogger() {
-		return logger;
-	}
-	
+
 	public ArrayList<Action> compute(Compilation comp) throws ParseException {
 		// create the extension from every combination of action and role value
 		ArrayList<Action> actions = new ArrayList<Action>();
@@ -237,7 +350,7 @@ public class ExtensionCalculator implements CompilerConstants, CompilationProper
 		}
 		return actions;
 	}
-
+	
 	private void computeRoleValueRange(ArrayList<RoleValueSet> ranges, RoleValueCastor castor, RoleValueSet vset) throws ParseException {
 		// compute the range as c \ union of subclasses and recurse for each subclass
 
@@ -296,134 +409,55 @@ public class ExtensionCalculator implements CompilerConstants, CompilationProper
 		}
 	}
 	
-	abstract class RoleValueCastor {
-		public abstract RoleValue cast(OWLClass c);
-	}
-	
-	public static TreeMap<String,TreeSet<Rule>> findRules(Compilation comp, Set<String> ext) {
-		TreeMap<String,TreeSet<Rule>> map = new TreeMap<String,TreeSet<Rule>>();
-		
-		// setup the reasoner classes
-		String ns = comp.getOntology().getOntologyID().getOntologyIRI().toString();
-		OWLReasoner reasoner = comp.getReasoner();
-		OWLDataFactory factory = comp.getOntology().getOWLOntologyManager().getOWLDataFactory();
-		Policy policy = comp.getPolicy();
-		
-		/* For each extension id, find all the superclasses of id that are also
-		 * subclasses of rule
-		 */
-		for (String extID : ext) {
-			OWLClass expr = factory.getOWLClass(IRI.create(ns + "#" + extID));
-			Set<OWLClass> set = reasoner.getSuperClasses(expr, true).getFlattened();
-			
-			for (OWLClass c : set) {
-				String id = c.getIRI().getFragment();
-				Rule rule = policy.getRule(id);
-
-				if (rule == null) {
-					continue;
-				}
-				TreeSet<Rule> rules = map.get(extID);
-				if (rules == null) {
-					rules = new TreeSet<Rule>();
-					map.put(extID, rules);
-				}
-				rules.add(rule);
-			}
-		}
-		return map;
-	}
-	
-	public static TreeMap<Rule,TreeSet<String>> findExtension(Compilation comp, List<Rule> rules) {
-		TreeMap<Rule,TreeSet<String>> map = new TreeMap<Rule,TreeSet<String>>();
-		
-		// setup the reasoner classes
-		String ns = comp.getOntology().getOntologyID().getOntologyIRI().toString();
-		OWLReasoner reasoner = comp.getReasoner();
-		OWLDataFactory factory = comp.getOntology().getOWLOntologyManager().getOWLDataFactory();
-		
-		/* For each rule, find all the subclasses of the rule id that are also
-		 * subclasses of the extension
-		 */
-		for (Rule rule : rules) {
-			OWLClass id = factory.getOWLClass(IRI.create(ns + "#" + rule.id));
-			Set<OWLClass> set = reasoner.getSubClasses(id, true).getFlattened();
-			
-			for (OWLClass c : set) {
-				TreeSet<String> ids = map.get(rule);
-				if (ids == null) {
-					ids = new TreeSet<String>();
-					map.put(rule, ids);
-				}
-				ids.add(c.getIRI().getFragment());
-			}
-		}
-		
-		return map;
-	}
-	
 	public Extension extend(Compilation comp) throws ParseException {
 		ArrayList<Action> actions = compute(comp);
 		Extension ext = extend(comp, actions, 0);
 		return ext;
 	}
 	
-	public static Extension extend(Compilation comp, List<Action> actions, int counter) {
-		// copy the ontology before performing extension
-		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-		OWLDataFactory factory = manager.getOWLDataFactory();
-		OWLOntology ontology = null;
-		OWLOntology onto = comp.getOntology();
-		String ns = onto.getOntologyID().getOntologyIRI().toString();
+	public Logger getLogger() {
+		return logger;
+	}
+	
+	private void setupClassesAndCastors() {
+		classActor = factory.getOWLClass(IRI.create(nsActor));
+		classDatum = factory.getOWLClass(IRI.create(nsDatum));
+		classPurpose = factory.getOWLClass(IRI.create(nsPurpose));
 		
-		// load the upper ontology
-		if (basePath != null) {
-			IRI docIRI = IRI.create("http://gaius.isri.cmu.edu/2011/8/policy-base.owl");
-			SimpleIRIMapper mapper = new SimpleIRIMapper(docIRI, IRI.create(basePath));
-			manager.addIRIMapper(mapper);
-		}
-		
-		IRI iri = IRI.create(Compiler.NS);
-		OWLImportsDeclaration decl = factory.getOWLImportsDeclaration(iri);
-		OWLOntologyLoaderConfiguration conf = new OWLOntologyLoaderConfiguration();
-
-		try {
-			ontology = manager.createOntology(IRI.create(ns));
-			manager.applyChange(new AddImport(ontology, decl));
-			manager.loadOntology(iri);
-			manager.makeLoadImportRequest(decl, conf);
-
-		} catch (OWLOntologyCreationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		// copy the axioms from the existing ontology
-		manager.addAxioms(ontology, onto.getAxioms());
-		
-		// compile the extension into the new ontology
-		Compiler compiler = new Compiler(ontology);
-		TreeMap<String,Action> extMap = new TreeMap<String,Action>();
-		
-		// for each action, create a new equivalence class to index that action
-		for (Action a : actions) {
-			try {
-				OWLClassExpression expr = compiler.compile(a);
-				OWLClassExpression id = factory.getOWLClass(IRI.create(ns + "#x" + counter));
-				OWLAxiom axiom1 = factory.getOWLEquivalentClassesAxiom(id, expr);
-				manager.addAxiom(ontology, axiom1);
-				extMap.put("x" + counter, a);
-				counter++;
-				
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		castActor = new RoleValueCastor() {
+			public RoleValue cast(OWLClass c) {
+				if (!c.equals(classActor)) {
+					return new Actor(c.getIRI().getFragment());
+				}
+				else {
+					return Actor.ANYONE;
+				}
 			}
-		}
+		};
+		castDatum = new RoleValueCastor() {
+			public RoleValue cast(OWLClass c) {
+				if (!c.equals(classDatum)) {
+					return new Datum(c.getIRI().getFragment());
+				}
+				else {
+					return Datum.ANYTHING;
+				}
+			}
+		};
+		castPurpose = new RoleValueCastor() {
+			public RoleValue cast(OWLClass c) {
+				if (!c.equals(classPurpose)) {
+					return new Purpose(c.getIRI().getFragment());
+				}
+				else {
+					return Purpose.ANYTHING;
+				}
+			}
+		};
 		
-		comp.getProperties().setProperty(CompilationProperties.EXT_COMPUTED, "true");
-		comp.getProperties().setProperty(CompilationProperties.EXT_SIZE, counter + "");
-		
-		return new Extension(compiler, comp.getPolicy(), ontology, extMap);
+		roleRangeMap.put(Role.Type.OBJECT, castDatum);
+		roleRangeMap.put(Role.Type.SOURCE, castActor);
+		roleRangeMap.put(Role.Type.TARGET, castActor);
+		roleRangeMap.put(Role.Type.PURPOSE, castPurpose);
 	}
 }

@@ -50,7 +50,7 @@ public class ConflictExample {
 			compiler.getManager().addIRIMapper(mapper);
 			
 			// tell extension calculator to use local ontology
-			ExtensionCalculator.setOntologyBasePath("examples/policy-base.owl");
+			ExtensionCalculator.setOntologyBasePolicy("examples/policy-base.owl");
 		}
 		
 		// compile the policy

@@ -11,9 +11,11 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.util.SimpleIRIMapper;
 
 import eddy.lang.Policy;
+import eddy.lang.Rule;
 import eddy.lang.analysis.CompilationProfile;
-import eddy.lang.analysis.Conflict;
+import eddy.lang.analysis.ExtensionCalculator;
 import eddy.lang.analysis.LimitationPrinciple;
+import eddy.lang.analysis.LimitationPrinciple.Violation;
 import eddy.lang.parser.Compilation;
 import eddy.lang.parser.Compiler;
 import eddy.lang.parser.ParseException;
@@ -34,7 +36,7 @@ public class LimitationExample {
 	public static void main(String[] args) throws ParseException,OWLException {
 		final String filestub = "examples/example.limit.use";
 		final String exampleName = LimitationExample.class.getName();
-		boolean useLocal = false;
+		boolean useLocal = true;
 		
 		long time = System.currentTimeMillis();
 		Parser parser = new Parser();
@@ -46,6 +48,10 @@ public class LimitationExample {
 			IRI docIRI = IRI.create("http://gaius.isri.cmu.edu/2011/8/policy-base.owl");
 			SimpleIRIMapper mapper = new SimpleIRIMapper(docIRI, IRI.create(new File("examples/policy-base.owl")));
 			compiler.getManager().addIRIMapper(mapper);
+			
+			// tell extension calculator to use local ontology
+			ExtensionCalculator.setOntologyBasePolicy("examples/policy-base.owl");
+			LimitationPrinciple.setOntologyBasePolicy("examples/policy-base.owl");
 		}
 		
 		// compile the policy
@@ -53,29 +59,28 @@ public class LimitationExample {
 		time = System.currentTimeMillis() - time;
 		System.err.println(exampleName + ": Parsing policy... " + (time / 1000) + " secs");
 		
-		// compute the extension and detect conflicts
+		// compute the extension and detect violations
 		System.err.print(exampleName + ": Computing limitations..");
 		time = System.currentTimeMillis();
 		LimitationPrinciple limit = new LimitationPrinciple();
 		limit.addSource("COLLECT");
 		limit.addTarget("USE");
 		limit.addTarget("TRANSFER");
-		ArrayList<Conflict> conflicts = limit.analyze(comp);
+		ArrayList<Violation> violations = limit.analyze(comp);
 		time = System.currentTimeMillis() - time;
 		System.err.println(". " + (time / 1000) + " secs");
 		
-		// report the conflicts
-		TreeSet<String> rules = new TreeSet<String>();
-		for (Conflict c : conflicts) {
-			System.err.println(exampleName + ": Conflict at " + c);
-			rules.add(c.rule1.id);
-			rules.add(c.rule2.id);
+		// report the violations
+		TreeSet<Rule> rules = new TreeSet<Rule>();
+		for (Violation v : violations) {
+			System.err.println(exampleName + ": Violation at " + v);
+			rules.addAll(v.violators);
 		}
-		if (conflicts.size() > 0) {
-			System.err.println(exampleName + ": Found " + conflicts.size() + " conflicting interpretations across " + rules.size() + " rules");
+		if (violations.size() > 0) {
+			System.err.println(exampleName + ": Found " + violations.size() + " violationg interpretations across " + rules.size() + " rules");
 		}
 		else {
-			System.err.println(exampleName + ": No conflicts found");
+			System.err.println(exampleName + ": No violations found");
 		}
 
 		// save the ontology to a file for inspection

@@ -1,14 +1,19 @@
 package eddy.lang.analysis;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.util.SimpleIRIMapper;
+
 import eddy.lang.Action;
 import eddy.lang.Policy;
 import eddy.lang.Role;
+import eddy.lang.Role.Type;
 import eddy.lang.Rule;
 import eddy.lang.Rule.Modality;
 import eddy.lang.parser.Compilation;
@@ -34,16 +39,124 @@ import eddy.lang.parser.ParseException;
  */
 
 public class LimitationPrinciple implements CompilationProperties {
+	public class Violation implements Comparable<Violation> {
+		public final TreeSet<String> source;
+		public final TreeSet<String> target;
+		public final Action action;
+		public final String id;
+		public final TreeSet<Rule> violators;
+		public final TreeSet<Rule> relaxables;
+		
+		public Violation(LimitationPrinciple principle, String id, Action action, TreeSet<Rule> violators, TreeSet<Rule> relaxables) {
+			this.source = new TreeSet<String>(principle.source);
+			this.target = new TreeSet<String>(principle.target);
+			this.id = id;
+			this.action = action;
+			this.violators = violators;
+			this.relaxables = relaxables;
+		}
+		public int compareTo(Violation v) {
+			return id.compareTo(v.id);
+		}
+		public boolean equals(Violation v) {
+			return compareTo(v) == 0;
+		}
+		
+		public String toString() {
+			TreeSet<String> rIDs = new TreeSet<String>();
+			for (Rule r : violators) {
+				rIDs.add(r.id);
+			}
+			TreeSet<String> xIDs = new TreeSet<String>();
+			for (Rule r : relaxables) {
+				xIDs.add(r.id);
+			}
+			String s = target.toString() + "-limitation violated by " + rIDs.toString() + 
+					", relaxables: "+ xIDs.toString();
+			return s;
+		}
+	}
+	class Worker implements Runnable {
+		private Extension extComp;
+		private ArrayList<Violation> violations = null;
+		private int index;
+		private LimitationPrinciple principle;
+		
+		public Worker(LimitationPrinciple principle) {
+			this.principle = principle;
+		}
+		public void run() {
+			this.violations = new ArrayList<Violation>();
+
+			// find all the target right interpretations
+			TreeMap<Rule,TreeSet<String>> targets = ExtensionCalculator.findExtension(extComp, targetRights);
+			TreeSet<String> targetIDs = new TreeSet<String>();
+			for (TreeSet<String> set : targets.values()) {
+				targetIDs.addAll(set);
+			}
+			int targetSize = targetIDs.size();
+			
+			// final all the limitation right interpretations
+			TreeMap<Rule,TreeSet<String>> limits = ExtensionCalculator.findExtension(extComp, limitRights);
+			TreeSet<String> limitIDs = new TreeSet<String>();
+			for (TreeSet<String> set : limits.values()) {
+				limitIDs.addAll(set);
+			}
+			int limitSize = limitIDs.size();
+			
+			// find all rules not subsumed by the limitations
+			targetIDs.removeAll(limitIDs);
+			TreeMap<String,TreeSet<Rule>> rules = ExtensionCalculator.findRules(extComp, targetIDs);
+
+			for (String id : rules.keySet()) {
+				Action action = extComp.getAction(id);
+				Role obj = action.getRole(Type.OBJECT);
+				Role src = action.getRole(Type.SOURCE);
+				
+				// find source rules using generalization of non-limited, violating interpretations
+				TreeSet<Rule> sources = new TreeSet<Rule>();
+				for (String act : source) {
+					Action generic = new Action(act);
+					generic.add(obj);
+					generic.add(src);
+					TreeMap<String,TreeSet<Rule>> map = ExtensionCalculator.findRules(extComp, generic);
+					for (TreeSet<Rule> values : map.values()) {
+						sources.addAll(values);
+					}
+				}
+				
+				// filter violating rules by permissions and obligations
+				TreeSet<Rule> violators = new TreeSet<Rule>();
+				for (Rule r : rules.get(id)) {
+					if (r.modality == Modality.PERMISSION || r.modality == Modality.OBLIGATION) {
+						violators.add(r);
+					}
+				}
+				
+				Violation v = new Violation(principle, id, action, violators, sources);
+				violations.add(v);
+			}
+			logger.log(Logger.DEBUG, "Found " + violations.size() + " violation(s) among " + targetSize + " targets and " + limitSize + " limits ");
+
+		}
+	}
+	private static File basePolicy = null;
+	public static void setOntologyBasePolicy(String path) {
+		basePolicy = new File(path);
+	}
 	private final TreeSet<String> source = new TreeSet<String>();
 	private final TreeSet<String> target = new TreeSet<String>();
 	private Compilation extComp;
 	private Logger logger = new Logger(new PrintWriter(System.err), Logger.WARN, this.getClass().getName() + ": ");
 	private int threadCount = 3;
 	private int blockSize = 1000;
-	private TreeSet<Conflict> conflicts = new TreeSet<Conflict>();
-	private ArrayList<Rule> targetRights = new ArrayList<Rule>();
-	private ArrayList<Rule> limitRights = new ArrayList<Rule>();
 	
+	private ArrayList<Violation> violations = new ArrayList<Violation>();
+	
+	private ArrayList<Rule> targetRights = new ArrayList<Rule>();
+	
+	private ArrayList<Rule> limitRights = new ArrayList<Rule>();
+
 	public LimitationPrinciple() {
 		return;
 	}
@@ -51,18 +164,14 @@ public class LimitationPrinciple implements CompilationProperties {
 	public void addSource(String action) {
 		source.add(action);
 	}
-
+	
 	public void addTarget(String action) {
 		target.add(action);
 	}
 	
-	public Compilation getExtendedCompilation() {
-		return extComp;
-	}
-	
-	public ArrayList<Conflict> analyze(Compilation comp) throws ParseException {
-		// reset the conflicts for this analysis
-		this.conflicts.clear();
+	public ArrayList<Violation> analyze(Compilation comp) throws ParseException {
+		// reset the violations for this analysis
+		this.violations.clear();
 		
 		// identify all the source rights
 		Policy policy = comp.getPolicy();
@@ -102,7 +211,14 @@ public class LimitationPrinciple implements CompilationProperties {
 		logger.log(Logger.DEBUG, "Computed " + limitRights.size() + " limiting rights");
 		
 		// compile the extended policy for analysis
-		this.extComp = new Compiler().compile(extPolicy);
+		Compiler compiler = new Compiler();
+		// load the upper ontology
+		if (basePolicy != null) {
+			IRI docIRI = IRI.create("http://gaius.isri.cmu.edu/2011/8/policy-base.owl");
+			SimpleIRIMapper mapper = new SimpleIRIMapper(docIRI, IRI.create(basePolicy));
+			compiler.getManager().addIRIMapper(mapper);
+		}
+		this.extComp = compiler.compile(extPolicy);
 		
 		// compute the extension based on the target actions, only
 		ExtensionCalculator calc = new ExtensionCalculator();
@@ -122,8 +238,8 @@ public class LimitationPrinciple implements CompilationProperties {
 		extComp.getProperties().setProperty(LIMIT_SOURCE, "" + source);
 		extComp.getProperties().setProperty(LIMIT_TARGET, "" + target);
 		extComp.getProperties().setProperty(LIMIT_RIGHTS, "" + limitRights.size());
-		extComp.getProperties().setProperty(LIMIT_CONFLICTS, "" + conflicts.size());
-		return new ArrayList<Conflict>(conflicts);
+		extComp.getProperties().setProperty(LIMIT_VIOLATIONS, "" + violations.size());
+		return new ArrayList<Violation>(violations);
 	}
 	
 	private void distribute(ArrayList<List<Action>> blocks, Compilation comp) {
@@ -132,7 +248,7 @@ public class LimitationPrinciple implements CompilationProperties {
 		
 		// initialize workers with shared list
 		for (int i = 0; i < worker.length; i++) {
-			worker[i] = new Worker();
+			worker[i] = new Worker(this);
 		}
 		
 		logger.log(Logger.DEBUG, "Dispatching " + blocks.size() + " work blocks to " + threadCount + " workers...");
@@ -154,10 +270,10 @@ public class LimitationPrinciple implements CompilationProperties {
 				}
 				else {
 					// check if this worker has any uncollected work
-					if (worker[i].conflicts != null) {
-						logger.log(Logger.DEBUG, "Received block " + worker[i].index + " with " + worker[i].conflicts.size() + " conflicts");
-						this.conflicts.addAll(worker[i].conflicts);
-						worker[i].conflicts = null;
+					if (worker[i].violations != null) {
+						logger.log(Logger.DEBUG, "Received block " + worker[i].index + " with " + worker[i].violations.size() + " violations");
+						this.violations.addAll(worker[i].violations);
+						worker[i].violations = null;
 					}
 					
 					// start a new thread for any remaining blocks
@@ -185,48 +301,7 @@ public class LimitationPrinciple implements CompilationProperties {
 		}
 	}
 	
-	class Worker implements Runnable {
-		private Extension extComp;
-		private TreeSet<Conflict> conflicts = null;
-		private int index;
-		
-		public Worker() {
-			return;
-		}
-		public void run() {
-			this.conflicts = new TreeSet<Conflict>();
-
-			// find all the target right interpretations
-			TreeMap<Rule,TreeSet<String>> targets = ExtensionCalculator.findExtension(extComp, targetRights);
-			TreeSet<String> targetIDs = new TreeSet<String>();
-			for (TreeSet<String> set : targets.values()) {
-				targetIDs.addAll(set);
-			}
-			int targetSize = targetIDs.size();
-			
-			// final all the limitation right interpretations
-			TreeMap<Rule,TreeSet<String>> limits = ExtensionCalculator.findExtension(extComp, limitRights);
-			TreeSet<String> limitIDs = new TreeSet<String>();
-			for (TreeSet<String> set : limits.values()) {
-				limitIDs.addAll(set);
-			}
-			int limitSize = limitIDs.size();
-			
-			// find all rules not subsumed by the limitations
-			targetIDs.removeAll(limitIDs);
-			TreeMap<String,TreeSet<Rule>> rules = ExtensionCalculator.findRules(extComp, targetIDs);
-
-			for (String id : rules.keySet()) {
-				for (Rule rule : rules.get(id)) {
-					if (rule.modality != Modality.PERMISSION && rule.modality != Modality.OBLIGATION) {
-						continue;
-					}
-					Action action = extComp.getAction(id);
-					conflicts.add(new Conflict(Conflict.Type.EXTENDED, rule, id, action));
-				}
-			}
-			logger.log(Logger.DEBUG, "Found " + conflicts.size() + " conflict(s) among " + targetSize + " targets and " + limitSize + " limits ");
-
-		}
+	public Compilation getExtendedCompilation() {
+		return extComp;
 	}
 }

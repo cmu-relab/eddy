@@ -17,17 +17,13 @@ public class Conflict implements Comparable<Conflict> {
 	/**
 	 * Describes the type of conflict. The type is one of: {@link #SHARED}, if the conflict
 	 * occurs over a shared interpretation (intersection); {@link #DIRECTED}, if the conflict
-	 * occurs over a subsumption relation between two interpretations; {@link #EQUIVALENT},
-	 * if the conflict occurs over an equivalent interpetetation between two rules; and
-	 * {@link #EXTENDED}, if the conflict is an interpretation that exists outside a limitation.
-	 * For example, if a limitation principle is applied and an action is permitted in excess
-	 * of the set of limiting rights, this action would be reported as a conflict with a
-	 * type {@link EXTENDED}.
+	 * occurs over a subsumption relation between two interpretations; {@link #EQUIVALENT}, or
+	 * if the conflict occurs over an equivalent interpetetation between two rules.
 	 * 
 	 * @author Travis Breaux
 	 *
 	 */
-	public enum Type {SHARED, DIRECTED, EQUIVALENT, EXTENDED};
+	public enum Type {SHARED, DIRECTED, EQUIVALENT};
 	public final Type type;
 	public final Rule rule1, rule2;
 	public final TreeMap<String,Action> actions = new TreeMap<String,Action>();
@@ -59,10 +55,8 @@ public class Conflict implements Comparable<Conflict> {
 	}
 	
 	public String toString() {
-		String s = type + " " + rule1.id;
-		if (type != Type.EXTENDED) {
-			s += "," + rule2.id;
-		}
+		String s = type + " " + rule1.id + "," + rule2.id;
+		
 		if (type == Type.SHARED) {
 			return s + " at " + actions.keySet().toString();
 		}
