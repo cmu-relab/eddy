@@ -106,7 +106,7 @@ public class Compilation {
 				OWLOntologyManager manager = ontology.getOWLOntologyManager();
 				manager.saveOntology(ontology, out);
 				
-				return new String(out.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+				return new String(out.toByteArray());
 			}
 			catch (OWLOntologyStorageException e) {
 				return null;
