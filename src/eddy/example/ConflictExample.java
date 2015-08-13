@@ -14,6 +14,7 @@ import eddy.lang.Policy;
 import eddy.lang.analysis.CompilationProfile;
 import eddy.lang.analysis.Conflict;
 import eddy.lang.analysis.ConflictAnalyzer;
+import eddy.lang.analysis.ConflictPrinter;
 import eddy.lang.analysis.Extension;
 import eddy.lang.analysis.ExtensionCalculator;
 import eddy.lang.parser.Compilation;
@@ -71,12 +72,18 @@ public class ConflictExample {
 		System.err.println(". " + (time / 1000) + " secs");
 		
 		// report the conflicts
+		ConflictPrinter printer = new ConflictPrinter(System.err);
 		TreeSet<String> rules = new TreeSet<String>();
 		for (Conflict c : conflicts) {
+			/*
 			System.err.println(exampleName + ": Conflict at " + c.toString());
 			rules.add(c.rule1.id);
 			rules.add(c.rule2.id);
+			//*/
+			printer.print(c);
 		}
+		printer.close();
+		
 		if (conflicts.size() > 0) {
 			System.err.println(exampleName + ": Found " + conflicts.size() + " conflicting interpretations across " + rules.size() + " rules");
 		}

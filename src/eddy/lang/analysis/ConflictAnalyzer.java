@@ -96,9 +96,9 @@ public class ConflictAnalyzer implements CompilerConstants, CompilationPropertie
 				if (!rule1.modality.conflictsWith(rule2.modality)) {
 					continue;
 				}
-				Conflict.Type type = Conflict.Type.DIRECTED;
+				Conflict.Type type = Conflict.Type.SUBSUMED_BY;
 				Action action = rule1.action.clone();
-				Conflict conflict = new Conflict(type, rule1, rule2, id, action);
+				Conflict conflict = new Conflict(ext, type, rule1, rule2, id, action);
 				conflicts.add(conflict);
 			}
 		}
@@ -111,7 +111,7 @@ public class ConflictAnalyzer implements CompilerConstants, CompilationPropertie
 					}
 					Conflict.Type type = Conflict.Type.SHARED;
 					Action action = ext.getAction(id);
-					Conflict conflict = new Conflict(type, r, rule2, id, action);
+					Conflict conflict = new Conflict(ext, type, r, rule2, id, action);
 					conflicts.add(conflict);
 				}
 			}

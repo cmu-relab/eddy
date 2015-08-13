@@ -16,30 +16,39 @@ import eddy.lang.Rule;
 public class Conflict implements Comparable<Conflict> {
 	/**
 	 * Describes the type of conflict. The type is one of: {@link #SHARED}, if the conflict
-	 * occurs over a shared interpretation (intersection); {@link #DIRECTED}, if the conflict
-	 * occurs over a subsumption relation between two interpretations; {@link #EQUIVALENT}, or
-	 * if the conflict occurs over an equivalent interpetetation between two rules.
+	 * occurs over a shared interpretation (intersection); {@link #SUBSUMES} or {@link #SUBSUMED_BY}, 
+	 * if the conflict occurs over a subsumption relation between two interpretations; 
+	 * {@link #EQUIVALENT}, or if the conflict occurs over an equivalent interpetetation 
+	 * between two rules.
 	 * 
 	 * @author Travis Breaux
 	 *
 	 */
-	public enum Type {SHARED, DIRECTED, EQUIVALENT};
+	public enum Type {SHARED, SUBSUMES, SUBSUMED_BY, EQUIVALENT};
+	public final Extension ext;
 	public final Type type;
 	public final Rule rule1, rule2;
 	public final TreeMap<String,Action> actions = new TreeMap<String,Action>();
 	
-	public Conflict(Type type, Rule rule1, Rule rule2, String id, Action action) {
-		this.type = type;
+	public Conflict(Extension ext, Type type, Rule rule1, Rule rule2, String id, Action action) {
+		this.ext = ext;
+		this.actions.put(id, action);
+		
+		// sort the rules, so the exclusion / permission is rule1, in that order.
+		if (rule2.modality.isExclusion() || rule2.modality.isPermissible()) {
+			Rule rule3 = rule2;
+			rule2 = rule1;
+			rule1 = rule3;
+			
+			// if swapping rules under subsumption, reverse direction of relation
+			if (type == Type.SUBSUMES) {
+				type = Type.SUBSUMED_BY;
+			}
+		}
+
 		this.rule1 = rule1;
 		this.rule2 = rule2;
-		this.actions.put(id, action);
-	}
-	
-	public Conflict(Type type, Rule rule, String id, Action action) {
 		this.type = type;
-		this.rule1 = rule;
-		this.rule2 = rule;
-		this.actions.put(id, action);
 	}
 	
 	public int compareTo(Conflict c) {

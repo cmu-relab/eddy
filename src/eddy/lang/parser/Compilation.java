@@ -1,5 +1,6 @@
 package eddy.lang.parser;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Properties;
@@ -98,4 +99,17 @@ public class Compilation {
 		}
 		return true;
 	}
+	
+	public String toString() {
+			try {
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				OWLOntologyManager manager = ontology.getOWLOntologyManager();
+				manager.saveOntology(ontology, out);
+				
+				return new String(out.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+			}
+			catch (OWLOntologyStorageException e) {
+				return null;
+			}
+		}
 }

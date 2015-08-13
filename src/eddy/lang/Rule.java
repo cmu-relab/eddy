@@ -106,6 +106,17 @@ public class Rule implements Comparable<Rule> {
 		public boolean equals(Modality m) {
 			return compareTo(m) == 0;
 		}
+		public boolean isPermissible() {
+			return this == Modality.PERMISSION 
+					|| this == Modality.OBLIGATION;
+		}
+		public boolean isExclusion() {
+			return this == Modality.EXCLUSION 
+					|| this == Modality.EXCLUSION_OBLIGATION 
+					|| this == Modality.EXCLUSION_PERMISSION
+					|| this == Modality.EXCLUSION_REFRAINMENT;
+		}
+		
 		public String toString() {
 			return label[type];
 		}
