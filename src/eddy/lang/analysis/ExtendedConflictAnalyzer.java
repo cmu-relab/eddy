@@ -124,6 +124,10 @@ public class ExtendedConflictAnalyzer {
 		this.cachePath = path;
 	}
 	
+	public void setBlockSize(int size) {
+		this.blockSize = size;
+	}
+	
 	class Worker implements Runnable {
 		private Extension extComp;
 		private ConflictAnalyzer analyzer = new ConflictAnalyzer();

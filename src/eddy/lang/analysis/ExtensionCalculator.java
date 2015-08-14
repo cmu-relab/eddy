@@ -225,7 +225,7 @@ public class ExtensionCalculator implements CompilerConstants, CompilationProper
 	
 	private final Logger logger = new Logger(new PrintWriter(System.err), Logger.WARN, this.getClass().getName() + ": ");
 	
-	private boolean computeExceptions = false;
+	private boolean computeExceptions = true;
 	
 	private boolean computeCompleteExtension = false;
 	
