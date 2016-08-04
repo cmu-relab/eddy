@@ -36,15 +36,20 @@ public class ConflictPrinter extends PrintWriter {
 	}
 	
 	public void print(Conflict c) {
-		println("Rule " + c.rule1.id + " is a " + noun.get(c.rule1.modality) + " " + c.rule1.action.toString());
-		println("Rule " + c.rule2.id + " is a " + noun.get(c.rule2.modality) + " " + c.rule2.action.toString());
-		flush();		
-		explain(c);
+		println(getMessage(c));
+		flush();
 	}
 	
-	private void explain(Conflict c) {
-		print("These rules conflict, because ");
-		
+	public static String getMessage(Conflict c) {
+		String s = "Rule " + c.rule1.id + " is a " + noun.get(c.rule1.modality) + " " + c.rule1.action.toString() +
+			"\n" +
+			"Rule " + c.rule2.id + " is a " + noun.get(c.rule2.modality) + " " + c.rule2.action.toString();
+		s += "\n" + explain(c);
+		return s;
+	}
+	
+	public static String explain(Conflict c) {
+		String s = "These rules conflict, because ";
 		
 		// explain the conflict based on modality, alone
 		if (c.rule1.modality.isExclusion()) {
@@ -52,42 +57,40 @@ public class ConflictPrinter extends PrintWriter {
 			if (act == null) {
 				act = "performed";
 			}
-			println("rule " + c.rule1.id + " excludes the action " + act + " by rule " + c.rule2.id);
+			s += "rule " + c.rule1.id + " excludes the action " + act + " by rule " + c.rule2.id;
 		}
 		else if (c.rule1.modality.isPermissible()) {
 			String act = presentContinous.get(c.rule1.modality);
 			if (act == null) {
 				act = "performs";
 			}
-			println("rule " + c.rule1.id + " " + act + " an action prohibited by rule " + c.rule2.id);
+			s += "rule " + c.rule1.id + " " + act + " an action prohibited by rule " + c.rule2.id;
 		}
-		flush();
 		
 		// explain the relationship between the conflicting actions
 		switch (c.type) {
 			case SUBSUMES:
-				println("Rule " + c.rule1.id + "'s action subsumes rule " + c.rule2.id + "'s action");
-				flush();
+				s += "Rule " + c.rule1.id + "'s action subsumes rule " + c.rule2.id + "'s action";
 				break;
 			case SUBSUMED_BY:
-				println("Rule " + c.rule1.id + "'s action is subsumed by rule " + c.rule2.id + "'s action");
-				flush();
+				s += "Rule " + c.rule1.id + "'s action is subsumed by rule " + c.rule2.id + "'s action";
 				break;
 			case SHARED:
-				println("These rules' actions share one or more interpretations.");
-				flush();
+				s += "These rules' actions share one or more interpretations.";
 				explainSharedInterpretations(c);
 				break;
 			case EQUIVALENT:
-				println("These rules' actions are otherwise equivalent.");
-				flush();
+				s += "These rules' actions are otherwise equivalent.";
 				break;
 		}
+		return s;
 	}
 	
-	public void explainSharedInterpretations(Conflict c) {
+	public static String explainSharedInterpretations(Conflict c) {
+		String s = "";
+		
 		if (c.type != Conflict.Type.SHARED) {
-			return;
+			return s;
 		}
 		Compiler compiler = c.ext.getCompiler();
 		
@@ -113,16 +116,16 @@ public class ConflictPrinter extends PrintWriter {
 				axiom3 = factory.getOWLSubClassOfAxiom(exp2, exp1);
 				
 				if (reasoner.isEntailed(axiom1)) {
-					println("Rule " + c.rule1.id + "'s " + r[0].toString() + " is equivalent to rule " 
-							+ c.rule2.id + "'s " + r[1].toString());
+					s += "Rule " + c.rule1.id + "'s " + r[0].toString() + " is equivalent to rule " 
+							+ c.rule2.id + "'s " + r[1].toString();
 				}
 				else if (reasoner.isEntailed(axiom2)) {
-					println("Rule " + c.rule1.id + "'s " + r[0].toString() + " subsumes rule " 
-							+ c.rule2.id + "'s " + r[1].toString());
+					s += "Rule " + c.rule1.id + "'s " + r[0].toString() + " subsumes rule " 
+							+ c.rule2.id + "'s " + r[1].toString();
 				}
 				else if (reasoner.isEntailed(axiom3)) {
-					println("Rule " + c.rule2.id + "'s " + r[1].toString() + " is subsumed by rule " 
-							+ c.rule1.id + "'s " + r[0].toString());
+					s += "Rule " + c.rule2.id + "'s " + r[1].toString() + " is subsumed by rule " 
+							+ c.rule1.id + "'s " + r[0].toString();
 				}
 			}
 			
@@ -130,6 +133,6 @@ public class ConflictPrinter extends PrintWriter {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		return s;
 	}
 }

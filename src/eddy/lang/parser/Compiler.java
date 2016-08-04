@@ -178,7 +178,7 @@ public class Compiler implements CompilerConstants {
 		}
 		
 		Compilation comp = new Compilation(this, policy, ontology);
-		assumeDisjointnessProperty(comp, classPurpose);
+		//assumeDisjointnessProperty(comp, classPurpose);
 		return comp;
 	}
 	

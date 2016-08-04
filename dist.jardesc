@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jardesc>
+    <jar path="/Users/travisbreaux/GitHub/eddy-django/eddy/java/eddy.jar"/>
+    <options buildIfNeeded="true" compress="false" descriptionLocation="/eddy/dist.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" manifestLocation="/mturk-nlp/dist.manifest" manifestVersion="1.0" reuseManifest="false" saveManifest="true" usesManifest="true">
+        <sealing sealJar="true">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
+        <folder path="/eddy/examples"/>
+        <folder path="/eddy/doc"/>
+        <file path="/eddy/README.md"/>
+        <javaElement handleIdentifier="=eddy/src"/>
+        <javaElement handleIdentifier="=eddy/tst"/>
+        <file path="/eddy/LICENSE.md"/>
+    </selectedElements>
+</jardesc>
